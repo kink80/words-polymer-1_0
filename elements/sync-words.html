@@ -1,0 +1,67 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-progress/paper-progress.html">
+
+<dom-module id="sync-words">
+  <template>
+    <iron-signals on-iron-signal-sync-words="syncWordSet"></iron-signals>
+    <iron-ajax
+      id="wordSetsSource"
+      headers='{"Content-Type": "application/json"}'
+      method="POST"
+      handle-as="json"
+      debounce-duration="300"
+      on-response="saveWords"></iron-ajax>
+    <iron-ajax
+      id="wordsSource"
+      headers='{"Content-Type": "application/json"}'
+      method="POST"
+      handle-as="json"
+      debounce-duration="300"
+      on-response="accumulate"></iron-ajax>
+  
+      <paper-dialog id="progressDialog" modal="true">
+        <div>Loading...</div>
+        <paper-progress indeterminate="true"></paper-progress>
+      </paper-dialog>
+  </template>
+</dom-module>
+
+<script>
+  // element registration
+  Polymer({
+    is: "sync-words",
+    properties: {
+      running: {
+        type: Boolean,
+        value: false
+      }
+    },
+    syncWordSet: function(e, detail) {
+     if (!this.running) {
+       this.running = true;
+       this.$.progressDialog.open();
+       this._syncSets(detail);
+     } else {
+       // Sync in progress, do nothing
+     }
+    },
+    _syncSets: function(detail) {
+      console.log(detail);
+
+      var body = {
+       "query": "SELECT B,C",
+       "url": "https://docs.google.com/spreadsheets/d/1OPSsdUclv4R-62SFtJB5GV6T6cLweyHoaQvbzIMizo4/edit#gid=0"
+      };
+      this.$.wordSetsSource.body = JSON.stringify(body);
+      this.$.wordSetsSource.url = "https://run.blockspring.com/api_v2/blocks/5496087e640fe656362d754b4d6cd7e6?api_key=br_2967_465b62fbba92324e23358aa9a590600f14fa9c66";
+      this.$.wordSetsSource.generateRequest();
+    },
+    saveWords: function(e, detail) {
+      console.log(detail.response.data);
+      this.running = false;
+      this.$.progressDialog.close();
+    } 
+  });
+</script>

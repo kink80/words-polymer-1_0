@@ -2,16 +2,25 @@
 
 <dom-module id="auth-login">
   <template>
-    <firebase-auth id="firebaseLogin" user="{{user}}" status-known="{{statusKnown}}" location="https://burning-fire-4813.firebaseio.com" provider="{{provider}}" on-error="errorHandler"></firebase-auth> 
+    <firebase-auth id="firebaseLogin" user="{{user}}" status-known="{{statusKnown}}" location="https://burning-fire-4813.firebaseio.com" provider="{{provider}}" on-error="errorHandler" on-login="onLogin" on-logout="onLogout"></firebase-auth> 
 
     <div hidden$="{{computeLoginHidden(statusKnown, user)}}">
-      <paper-input label="Email" value="{{email::input}}"></paper-input>
-      <paper-input label="Password" value="{{password::input}}" type="password"></paper-input>
-      <paper-button on-tap="login">Login</paper-button>
+      <paper-header-panel class="flex">
+        Logged out
+      </paper-header-panel>
+      <div>
+        <paper-input label="Email" value="{{email::input}}"></paper-input>
+        <paper-input label="Password" value="{{password::input}}" type="password"></paper-input>
+        <paper-button on-tap="login">Login</paper-button>
+      </div>
     </div>
    
     <div hidden$="{{computeLogoutHidden(statusKnown, user)}}">
-      <paper-button on-tap="logout">Logout</paper-button>
+      <paper-header-panel class="flex">
+        <paper-toolbar>
+          <paper-button on-tap="logout">Logout</paper-button>
+        </paper-toolbar>
+      </paper-header-panel>
     </div>
   </template>
 </dom-module>
@@ -98,6 +107,12 @@
     },
     computeLogoutHidden: function(statusKnown, user) {
       return !statusKnown || !user;
+    },
+    onLogin: function() {
+      this.fire('iron-signal', {name: "sync-words", data: "Foo!"});
+    },
+    onLogout: function() {
+      console.log('logged out');
     }
   });
 </script>
