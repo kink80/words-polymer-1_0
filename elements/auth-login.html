@@ -1,0 +1,104 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+
+<dom-module id="auth-login">
+  <template>
+    <firebase-auth id="firebaseLogin" user="{{user}}" status-known="{{statusKnown}}" location="https://burning-fire-4813.firebaseio.com" provider="{{provider}}" on-error="errorHandler"></firebase-auth> 
+
+    <div hidden$="{{computeLoginHidden(statusKnown, user)}}">
+      <paper-input label="Email" value="{{email::input}}"></paper-input>
+      <paper-input label="Password" value="{{password::input}}" type="password"></paper-input>
+      <paper-button on-tap="login">Login</paper-button>
+    </div>
+   
+    <div hidden$="{{computeLogoutHidden(statusKnown, user)}}">
+      <paper-button on-tap="logout">Logout</paper-button>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+  // element registration
+  Polymer({
+    is: "auth-login",
+
+     properties: {
+      provider: {
+        type: String,
+        value: 'password'
+      },
+      message: {
+        type: String,
+        value: ''
+      },
+      email: {
+        type: String,
+        value: ''
+      },
+      password: {
+        type: String,
+        value: ''
+      },
+      user: {
+        type: Object,
+        value: null
+      },
+      statusKnown: {
+        type: Boolean
+      }
+    },
+    login: function() {
+      var params;
+      try {
+        params = JSON.parse(this.params);
+      } catch (e) {
+        params = null;
+      }
+      if (this.provider == 'password') {
+        params = params || {};
+        params.email = this.email;
+        params.password = this.password;
+      }
+      this.$.firebaseLogin.login(params);
+    },
+    logout: function() {
+      this.$.firebaseLogin.logout();
+    },
+    errorHandler: function(e) {
+      this.message = 'Error: ' + e.detail.message;
+    },
+    userSuccessHandler: function(e) {
+      this.message = e.type + ' success!';
+    },
+    createUserHandler: function(e) {
+      this.$.firebaseLogin.createUser(this.email, this.password);
+    },
+    changePasswordHandler: function(e) {
+      this.$.firebaseLogin.changePassword(this.email, this.password, this.newPassword);
+    },
+    resetPasswordHandler: function(e) {
+      this.$.firebaseLogin.sendPasswordResetEmail(this.email);
+    },
+    computePasswordHidden: function(provider) {
+      return provider !== 'password';
+    },
+    computeCreateUserDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeChangePasswordDisabled: function(email, password, newPassword) {
+      return !email || !password || !newPassword;
+    },
+    computeResetPasswordDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeRemoveUserDisabled: function(email, password) {
+      return !email || !password;
+    },
+    computeLoginHidden: function(statusKnown, user) {
+      return !statusKnown || !!user;
+    },
+    computeLogoutHidden: function(statusKnown, user) {
+      return !statusKnown || !user;
+    }
+  });
+</script>
+

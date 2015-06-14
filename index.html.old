@@ -15,13 +15,24 @@
     <link rel="import" href="bower_components/paper-toolbar/paper-toolbar.html">
     <link rel="import" href="bower_components/paper-menu/paper-menu.html">
     <link rel="import" href="bower_components/paper-item/paper-item.html"> 
-    <link rel="import" href="bower_components/paper-input/paper-input.html"> 
-    <link rel="import" href="bower_components/paper-button/paper-button.html"> 
-    <link rel="import" href="bower_components/firebase-element/firebase-auth.html">
     <link rel="import" href="elements/words-list.html">
-    <link rel="import" href="elements/auth-login.html">
 
   <body>
-    <auth-login></auth-login> 
+   <paper-drawer-panel>
+    <paper-header-panel drawer>
+      <paper-toolbar>
+        <span>Lessons</span>
+      </paper-toolbar>
+      <div>
+       <words-list></words-list>
+      </div>
+    </paper-header-panel>
+    <paper-header-panel main>
+      <paper-toolbar>
+        <span flex>Words</span>
+      </paper-toolbar>
+      <div> Main content... </div>
+    </paper-header-panel>
+   </paper-drawer-panel>
   </body>
 </html>
