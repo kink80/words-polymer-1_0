@@ -22,7 +22,7 @@
       on-response="accumulate"></iron-ajax>
   
       <paper-dialog id="progressDialog" modal="true">
-        <div>Loading...</div>
+        <div>{{loadingMessage}}</div>
         <paper-progress indeterminate="true"></paper-progress>
       </paper-dialog>
   </template>
@@ -36,6 +36,10 @@
       running: {
         type: Boolean,
         value: false
+      },
+      loadingMessage: {
+        type: String,
+        value: 'Loading...'
       }
     },
     syncWordSet: function(e, detail) {
@@ -61,7 +65,38 @@
     saveWords: function(e, detail) {
       console.log(detail.response.data);
       this.running = false;
-      this.$.progressDialog.close();
+    
+      var progressDialog = this.$.progressDialog;
+      var wordSets = detail.response.data;
+      if ( wordSets != null && wordSets.length > 0) {
+        var pendingSync = wordSets.length;
+        for (var i = 0; i < pendingSync; i++) {
+          var set = wordSets[i];
+          var body = JSON.stringify({
+               "query": "SELECT B,C",
+               "url": set.url
+             }); 
+          var options = {
+             "method": "POST",
+             "url": "https://run.blockspring.com/api_v2/blocks/5496087e640fe656362d754b4d6cd7e6?api_key=br_2967_465b62fbba92324e23358aa9a590600f14fa9c66",
+             "body": body,
+             "headers": {
+               "Content-Type": "application/json"
+             }
+          };
+          var ajaxReq = document.createElement('iron-request');
+          ajaxReq.send(options).then(
+	    function(a) { 
+              var wordsInSet = a.response.data;
+              if ( --pendingSync == 0) {
+   		progressDialog.close();             
+              }      
+ 	    }, 
+            function() { 
+	      console.log('fuck') 
+	  });
+        }
+      }
     } 
   });
 </script>
