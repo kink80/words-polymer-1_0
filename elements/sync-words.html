@@ -6,6 +6,7 @@
 <dom-module id="sync-words">
   <template>
     <iron-signals on-iron-signal-sync-words="syncWordSet"></iron-signals>
+    <iron-signals on-iron-signal-update-words="updateWordSet"></iron-signals>
     <iron-ajax
       id="wordSetsSource"
       headers='{"Content-Type": "application/json"}'
@@ -52,8 +53,6 @@
      }
     },
     _syncSets: function(detail) {
-      console.log(detail);
-
       var body = {
        "query": "SELECT B,C",
        "url": "https://docs.google.com/spreadsheets/d/1OPSsdUclv4R-62SFtJB5GV6T6cLweyHoaQvbzIMizo4/edit#gid=0"
@@ -63,15 +62,31 @@
       this.$.wordSetsSource.generateRequest();
     },
     saveWords: function(e, detail) {
-      console.log(detail.response.data);
       this.running = false;
-    
-      var progressDialog = this.$.progressDialog;
       var wordSets = detail.response.data;
       if ( wordSets != null && wordSets.length > 0) {
         var pendingSync = wordSets.length;
-        for (var i = 0; i < pendingSync; i++) {
-          var set = wordSets[i];
+        var sets = [];
+
+        var makeWordSet = function() {
+          var sets = wordSets;  
+          var current;
+
+          return {
+            getNext: function() {
+              current = sets.pop();
+              return current;
+            },
+            isEmpty: function() {
+              return sets.length < 1;
+            }
+          };
+        };
+        
+        var sets = makeWordSet();
+        var processed = [];
+        while( !sets.isEmpty() ) {
+          var set = sets.getNext();
           var body = JSON.stringify({
                "query": "SELECT B,C",
                "url": set.url
@@ -84,19 +99,37 @@
                "Content-Type": "application/json"
              }
           };
-          var ajaxReq = document.createElement('iron-request');
-          ajaxReq.send(options).then(
-	    function(a) { 
-              var wordsInSet = a.response.data;
-              if ( --pendingSync == 0) {
-   		progressDialog.close();             
-              }      
- 	    }, 
-            function() { 
-	      console.log('fuck') 
-	  });
+
+          var parentObjectRef = this;
+
+          (function(reqSet, reqOptions) {
+            var ajaxReq = document.createElement('iron-request');
+            ajaxReq.send(reqOptions).then(
+              function(a) { 
+                var wordsInSet = JSON.parse(a.parseResponse());
+                var wordSet = {
+                  "name": reqSet.name,
+                  "url": reqSet.url,
+                  "words": wordsInSet.data,
+                  "md5": md5(reqSet.name + reqSet.url)
+                };
+                processed.push(wordSet);    
+                if ( --pendingSync == 0) {
+                  parentObjectRef.fire('iron-signal', {name: "update-words", data: processed});     
+                }      
+              }, 
+              function() { 
+               console.log('fuck') 
+              });
+          }) (set, options);
+          
         }
       }
+    },
+    updateWordSet: function(e, sets) {
+      var progressDialog = this.$.progressDialog;
+      progressDialog.close();
+      console.log(sets);
     } 
   });
 </script>
