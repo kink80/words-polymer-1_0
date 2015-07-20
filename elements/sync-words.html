@@ -13,15 +13,8 @@
       method="POST"
       handle-as="json"
       debounce-duration="300"
-      on-response="saveWords"></iron-ajax>
-    <iron-ajax
-      id="wordsSource"
-      headers='{"Content-Type": "application/json"}'
-      method="POST"
-      handle-as="json"
-      debounce-duration="300"
-      on-response="accumulate"></iron-ajax>
-  
+      on-response="saveWords" />
+
       <paper-dialog id="progressDialog" modal="true">
         <div>{{loadingMessage}}</div>
         <paper-progress indeterminate="true"></paper-progress>
@@ -128,8 +121,38 @@
     },
     updateWordSet: function(e, sets) {
       var progressDialog = this.$.progressDialog;
-      progressDialog.close();
-      console.log(sets);
+
+      var userHash = md5(document.getElementById("firebaseLogin").user.password.email);
+      var ref = new Firebase("https://burning-fire-4813.firebaseio.com/users/");
+
+      var userRef = ref.child(userHash);
+
+      var setMeta = [], setWords =[];
+      for(var i = 0; i < sets.length; i++) {
+        setMeta.push({
+          "id": sets[i].md5,
+          "name": sets[i].name
+        });
+        setWords.push({
+          "id": sets[i].md5,
+          "words": sets[i].words
+        });
+      };
+      var data = {
+        user_id: userHash,
+        sets: setMeta,
+        wordSets: setWords
+      };
+
+      userRef.once('value', function(snapshot) {
+          var exists = (snapshot.val() !== null);
+          console.log("User " + userHash + " " + exists);
+          if ( !exists ) {
+            userRef.set(data);
+          }
+
+          progressDialog.close();
+      });
     } 
   });
 </script>
