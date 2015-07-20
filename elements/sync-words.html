@@ -123,32 +123,60 @@
       var progressDialog = this.$.progressDialog;
 
       var userHash = md5(document.getElementById("firebaseLogin").user.password.email);
-      var ref = new Firebase("https://burning-fire-4813.firebaseio.com/users/");
+      var wordsRef = new Firebase("https://burning-fire-4813.firebaseio.com/v1/words/" + userHash);
 
-      var userRef = ref.child(userHash);
-
-      var setMeta = [], setWords =[];
+      var setWords =[], setIndex = {};
       for(var i = 0; i < sets.length; i++) {
-        setMeta.push({
-          "id": sets[i].md5,
-          "name": sets[i].name
-        });
+        var wordsHash = md5(JSON.stringify(sets[i].words));
         setWords.push({
-          "id": sets[i].md5,
+          "hash": wordsHash,
+          "origin": sets[i].md5,
+          "name": sets[i].name,
           "words": sets[i].words
         });
-      };
-      var data = {
-        user_id: userHash,
-        sets: setMeta,
-        wordSets: setWords
+        setIndex[sets[i].md5] = {
+          "hash": wordsHash, 
+          "origin": sets[i].md5,
+          "name": sets[i].name,
+          "words": sets[i].words
+        };
       };
 
-      userRef.once('value', function(snapshot) {
+      var wordsData = {
+        wordSets: setWords
+      }
+
+      wordsRef.once('value', function(snapshot) {
           var exists = (snapshot.val() !== null);
-          console.log("User " + userHash + " " + exists);
+          console.log(snapshot.val());
           if ( !exists ) {
-            userRef.set(data);
+            wordsRef.set(wordsData);
+          } else {
+            // Some sets were already saved
+            var savedSets = snapshot.val().wordSets;
+            var setUpdate = [];
+            for ( var i = 0; i < savedSets.length; i++) {
+              var destSet = savedSets[i];
+              var indexedSet = setIndex[destSet.origin];
+
+              if ( indexedSet ) {
+                // Set with the same source exists, check the hash
+                console.log("Src set:" + indexedSet);
+                console.log("Dest set:" + destSet);
+
+                if ( destSet.hash !== indexedSet.hash) {
+                  // Use the new set
+                  setUpdate.push(indexedSet);
+                } else {
+                  setUpdate.push(destSet);
+                }
+              }
+            }
+
+            var updatedSet = {
+              wordSets: setUpdate
+            };
+            wordsRef.update(updatedSet);
           }
 
           progressDialog.close();
