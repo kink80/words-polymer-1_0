@@ -1,27 +1,16 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/firebase-element/firebase-collection.html">
 
 <dom-module id="words-list">
   <template>
-    <iron-ajax
-      auto
-      url="https://run.blockspring.com/api_v2/blocks/5496087e640fe656362d754b4d6cd7e6?api_key=br_2967_465b62fbba92324e23358aa9a590600f14fa9c66"
-      body='{"query":"SELECT B,C", "url":"https://docs.google.com/spreadsheets/d/1OPSsdUclv4R-62SFtJB5GV6T6cLweyHoaQvbzIMizo4/edit#gid=0"}'
-      headers='{"Content-Type": "application/json"}'
-      method="POST"
-      handle-as="json"
-      debounce-duration="300"
-      last-response="{{resp}}"></iron-ajax>
+    <firebase-collection
+      location="{{ loc }}"
+      data="{{ wordSets }}"></firebase-collection>
 
-    <iron-ajax id="wordsajax" 
-      handleAs="json" 
-      headers='{"Content-Type": "application/json"}'
-      method="POST"
-      on-response="processWords"></iron-ajax>
-    
     <paper-menu class='menu' on-iron-select="selectAction"> 
-      <template is="dom-repeat" items="{{resp.data}}">
-        <paper-item url="{{item.url}}" label="{{item.name}}">{{item.name}}</paper-item>
+      <template is="dom-repeat" items="[[ wordSets ]]" as="item">
+        <paper-item label="{{item.name}}">{{item.name}}</paper-item>
       </template>
     </paper-menu>
   </template>
@@ -31,27 +20,18 @@
   // element registration
   Polymer({
     is: "words-list",
+
+    properties: {
+      loc: {
+        type: String,
+        value: ""
+      }
+    },
     selectAction: function(e, detail) {
-      // var wordsElem = document.querySelector("pages-words");
-      // wordsElem.loading = true;
-      var body = {
-       "query": "SELECT B,C",
-       "url": detail.item.url
-      };
-      this.$.wordsajax.body = JSON.stringify(body);
-      this.$.wordsajax.url = "https://run.blockspring.com/api_v2/blocks/5496087e640fe656362d754b4d6cd7e6?api_key=br_2967_465b62fbba92324e23358aa9a590600f14fa9c66";
-      this.$.wordsajax.generateRequest();
-      
-      var drawer = document.querySelector("paper-drawer-panel");
-      drawer.closeDrawer();
+      // var drawer = document.querySelector("paper-drawer-panel");
+      // drawer.closeDrawer();
     },
     processWords: function(e, detail) {
-     // var wordsElem = document.querySelector("pages-words");
-     // wordsElem.words = detail.response.data;
-       
-     // wordsElem.loading = false;
-     console.log(detail.response.data);
-     console.log(this.$.wordsajax.body);
     }
   });
 </script>

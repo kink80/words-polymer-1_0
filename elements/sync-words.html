@@ -55,7 +55,6 @@
       this.$.wordSetsSource.generateRequest();
     },
     saveWords: function(e, detail) {
-      this.running = false;
       var wordSets = detail.response.data;
       if ( wordSets != null && wordSets.length > 0) {
         var pendingSync = wordSets.length;
@@ -121,25 +120,34 @@
     },
     updateWordSet: function(e, sets) {
       var progressDialog = this.$.progressDialog;
+      var objRef = this;
 
       var userHash = md5(document.getElementById("firebaseLogin").user.password.email);
       var wordsRef = new Firebase("https://burning-fire-4813.firebaseio.com/v1/words/" + userHash);
 
       var setWords =[], setIndex = {};
       for(var i = 0; i < sets.length; i++) {
-        var wordsHash = md5(JSON.stringify(sets[i].words));
         setWords.push({
-          "hash": wordsHash,
           "origin": sets[i].md5,
           "name": sets[i].name,
           "words": sets[i].words
         });
         setIndex[sets[i].md5] = {
-          "hash": wordsHash, 
           "origin": sets[i].md5,
           "name": sets[i].name,
           "words": sets[i].words
         };
+
+        var words = sets[i].words;
+        var indexedWords = [];
+        for ( var j = 0; j < words.length; j++ ) {
+          // Rank 5 will be medium
+          words[j].rank = 5;
+
+          indexedWords[words[j]] = words[j];
+        }
+
+        setIndex[sets[i].md5].indexedWords = indexedWords;
       };
 
       var wordsData = {
@@ -148,29 +156,47 @@
 
       wordsRef.once('value', function(snapshot) {
           var exists = (snapshot.val() !== null);
-          console.log(snapshot.val());
           if ( !exists ) {
             wordsRef.set(wordsData);
           } else {
             // Some sets were already saved
             var savedSets = snapshot.val().wordSets;
+            var indexedSavedSets = [];
             var setUpdate = [];
             for ( var i = 0; i < savedSets.length; i++) {
-              var destSet = savedSets[i];
-              var indexedSet = setIndex[destSet.origin];
+              // Index the set by the hash
+              var savedSet = savedSets[i];
+              indexedSavedSets[savedSet.origin] = savedSets[i];
+            }
 
-              if ( indexedSet ) {
-                // Set with the same source exists, check the hash
-                console.log("Src set:" + indexedSet);
-                console.log("Dest set:" + destSet);
+            var incomingSets = wordsData.wordSets;
 
-                if ( destSet.hash !== indexedSet.hash) {
-                  // Use the new set
-                  setUpdate.push(indexedSet);
-                } else {
-                  setUpdate.push(destSet);
+            // Loop through all sets coming from Google drive
+            for ( var i = 0; i < incomingSets.length; i++) {
+              var incomingSet = incomingSets[i];
+              // Find a match in existing sets
+              var indexedExistingSet = indexedSavedSets[incomingSet.origin];
+
+              if ( indexedExistingSet ) {
+                // Hard path, check all matches and update words accordingly
+                var existingWords = indexedExistingSet.words;
+                var existingWordsIndex = [];
+                for ( var j = 0; j < existingWords.length ; j++ ) {
+                  existingWordsIndex[existingWords[j].original] = existingWords[j];
+                }
+
+                // Take each word a look it up in the index
+                var incomingWords = incomingSet.words;
+                for ( var k = 0; k < incomingWords.length ; k++ ) {
+                  var incomingWord = incomingWords[k];
+                  var existingWord = existingWordsIndex[incomingWords[k].original];
+                  if ( existingWord ) {
+                    // Word was already saved, take the rank from it
+                    incomingWord.rank = existingWord.rank || 5;
+                  }
                 }
               }
+              setUpdate.push(incomingSet);
             }
 
             var updatedSet = {
@@ -179,6 +205,7 @@
             wordsRef.update(updatedSet);
           }
 
+          objRef.fire('iron-signal', {name: "sync-complete", data: "Foo!"});
           progressDialog.close();
       });
     } 
