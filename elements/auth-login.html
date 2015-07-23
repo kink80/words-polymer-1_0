@@ -25,11 +25,11 @@
         </paper-toolbar>
       </paper-header-panel>
       <div class="horizontal layout">
-        <div id="wordListContainer">
+        <div id="wordNamesContainer">
           
         </div>
-        <div class="flex">
-          <p>flex (horizontal layout)</p>
+        <div class="flex" id="wordListContainer">
+          
         </div>
     </div>
     </div>
@@ -123,26 +123,23 @@
     computeLogoutHidden: function(statusKnown, user) {
       return !statusKnown || !user;
     },
-    onLogin: function() {
-      this.fire('iron-signal', {name: "sync-words", data: "Foo!"});
+    onLogin: function(e, detail) {
+      this.syncing = true;
+      this.fire('iron-signal', {name: "sync-words", data: detail});
     },
     onLogout: function() {
       console.log('logged out');
     },
-    attached: function() {
-      if ( !this.computeLogoutHidden(this.statusKnown, this.user) ) {
-        this._renderWordsLIst();
-      }
-    },
     syncComplete: function(e, detail) {
       this.syncing = false;
-      this._renderWordsLIst();
+      this._renderWordsList();
     },
-    _renderWordsLIst: function() {
+    _renderWordsList: function() {
       if ( ! this.syncing ) {
-        var container = document.getElementById("wordListContainer");
+        var container = document.getElementById("wordNamesContainer");
         var wordsList = document.createElement('words-list');
-        var loc = "https://burning-fire-4813.firebaseio.com/v1/words/" + md5(this.user.password.email) + "/wordSets";
+        var loc = "https://burning-fire-4813.firebaseio.com/v1/user/" + md5(this.user.password.email) + "/wordSets";
+
         Polymer.dom(wordsList).setAttribute("loc", loc);
         Polymer.dom(container).appendChild(wordsList);
       }

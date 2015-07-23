@@ -1,16 +1,12 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="../bower_components/firebase-element/firebase-collection.html">
 
 <dom-module id="words-list">
-  <template>
-    <firebase-collection
-      location="{{ loc }}"
-      data="{{ wordSets }}"></firebase-collection>
 
+  <template>
     <paper-menu class='menu' on-iron-select="selectAction"> 
-      <template is="dom-repeat" items="[[ wordSets ]]" as="item">
-        <paper-item label="{{item.name}}">{{item.name}}</paper-item>
+      <template is="dom-repeat" items="{{ wordSets }}" as="item">
+        <paper-item origin="{{ item.origin }}" label="{{ item.name }}">{{ item.name }}</paper-item>
       </template>
     </paper-menu>
   </template>
@@ -24,12 +20,63 @@
     properties: {
       loc: {
         type: String,
-        value: ""
+        value: '',
+        notify: true,
+        observer: '_locationChanged'
+      },
+      wordSets: {
+        type: Array,
+        value: function() {
+          return [];
+        },
+        notify: true
+      },
+      data: {
+        type: Object,
+        value: function() {
+          return {};
+        },
+        notify: true
+      }
+    },
+    ready: function() {
+        this.employees = [
+            {first: 'Bob', last: 'Smith'},
+            {first: 'Sally', last: 'Johnson'}
+            
+        ];
+      },
+    _locationChanged: function(newValue, oldValue) {
+      var componentRef = this;
+      if ( newValue !== '') {
+        var wordsRef = new Firebase(newValue);
+        wordsRef.once('value', function(snapshot) {
+            var exists = (snapshot.val() !== null);
+            if ( exists ) {
+              var wordSets = snapshot.val();
+              componentRef.data = wordSets;
+
+              var wordSetArray = [];
+              // Parse wordsets into array
+              for (wordSet in wordSets) {
+                if (!wordSets.hasOwnProperty(wordSet)) {
+                    //The current property is not a direct property of p
+                  continue;
+                }
+                wordSetArray.push(wordSets[wordSet]);
+              }
+
+              componentRef.wordSets = wordSetArray;
+            }
+          }
+        );
       }
     },
     selectAction: function(e, detail) {
       // var drawer = document.querySelector("paper-drawer-panel");
       // drawer.closeDrawer();
+      console.log(detail.item.origin);
+      console.log(this.data[detail.item.origin]);
     },
     processWords: function(e, detail) {
     }
