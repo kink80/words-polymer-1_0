@@ -21,16 +21,14 @@
         <paper-input label="Email" value="{{email::input}}"></paper-input>
         <iron-a11y-keys target="{{ pwinput }}" keys="enter" on-keys-pressed="login"></iron-a11y-keys>
         <paper-input id="pwinput" label="Password" value="{{password::input}}" type="password"></paper-input>
-        <paper-button on-tap="login">Login</paper-button>
+        <paper-button raised on-tap="login">Login</paper-button>
       </div>
     </div>
    
     <div hidden$="{{computeLogoutHidden(statusKnown, user)}}">
-      <paper-header-panel class="flex">
-        <paper-toolbar>
-          <paper-button on-tap="logout">Logout</paper-button>
-        </paper-toolbar>
-      </paper-header-panel>
+     
+      <paper-button raised on-tap="logout">Logout</paper-button>
+      
       <div class="horizontal layout">
         <div id="wordNamesContainer">
           

@@ -154,17 +154,23 @@
             var savedSets = snapshot.val();
             var indexedSavedSets = [];
             var setUpdate = [];
-            for ( var i = 0; i < savedSets.length; i++) {
-              // Index the set by the hash
-              var savedSet = savedSets[i];
-              indexedSavedSets[savedSet.origin] = savedSets[i];
+
+            for (savedSetHash in savedSets) {
+              if (!savedSets.hasOwnProperty(savedSetHash)) {
+                continue;
+              }
+              var savedSet = savedSets[savedSetHash];
+              indexedSavedSets[savedSet.origin] = savedSet;
             }
 
             var incomingSets = setIndex;
 
             // Loop through all sets coming from Google drive
-            for ( var i = 0; i < incomingSets.length; i++) {
-              var incomingSet = incomingSets[i];
+            for ( incomingSetHash in incomingSets) {
+              if (!incomingSets.hasOwnProperty(incomingSetHash)) {
+                continue;
+              }
+              var incomingSet = incomingSets[incomingSetHash];
               // Find a match in existing sets
               var indexedExistingSet = indexedSavedSets[incomingSet.origin];
 
@@ -190,10 +196,7 @@
               setUpdate[incomingSet.origin] = incomingSet;
             }
 
-            var updatedSet = {
-              wordSets: setUpdate
-            };
-            wordsRef.update(updatedSet);
+            wordsRef.set(setUpdate);
           }
 
           objRef.fire('iron-signal', {name: "sync-completed", data: "Foo!"});
