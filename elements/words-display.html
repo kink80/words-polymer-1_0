@@ -1,0 +1,51 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+
+<dom-module id="words-display">
+
+  <style>
+     .fullheight { 
+       height: 100%;
+     }
+     .grey {
+       background-color: grey;
+     }
+     newon-animated-pages.words {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          font-size: 72px;
+          overflow: hidden;
+      }
+  </style>
+
+  <template>
+    <iron-signals on-iron-signal-load-words="loadWords"></iron-signals>
+
+    <neon-animated-pages id="pages" selected="0" class="flex">
+      <template is="dom-repeat" items="{{ data.words }}" as="item">
+         <div class="fullheight grey">{{ item.original }}</div>
+      </template>  
+    </neon-animated-pages>
+  </template>
+</dom-module>
+
+<script>
+  // element registration
+  Polymer({
+    is: "words-display",
+    properties: {
+      data: {
+        type: Object,
+        value: function() {
+          return {};
+        }
+      }
+    },
+    loadWords: function(e, detail) {
+      this.data = detail;
+    }
+  });
+</script>

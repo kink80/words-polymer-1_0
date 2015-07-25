@@ -2,15 +2,22 @@
 <link rel="import" href="../bower_components/iron-signals/iron-signals.html">
 
 <dom-module id="auth-login">
+  <style>
+    .content-wrapper {
+      background: orange;
+      width: 60%;
+      margin: 0 auto;
+      padding-top: 20%;
+      padding-left: 5%;
+      padding-right: 5%;
+    }
+  </style>
   <template>
     <firebase-auth id="firebaseLogin" user="{{user}}" status-known="{{statusKnown}}" location="https://burning-fire-4813.firebaseio.com" provider="{{provider}}" on-error="errorHandler" on-login="onLogin" on-logout="onLogout"></firebase-auth>
     <iron-signals on-iron-signal-sync-completed="syncComplete"></iron-signals>
 
     <div hidden$="{{computeLoginHidden(statusKnown, user)}}">
-      <paper-header-panel class="flex">
-        Logged out
-      </paper-header-panel>
-      <div>
+      <div class="content-wrapper">
         <paper-input label="Email" value="{{email::input}}"></paper-input>
         <iron-a11y-keys target="{{ pwinput }}" keys="enter" on-keys-pressed="login"></iron-a11y-keys>
         <paper-input id="pwinput" label="Password" value="{{password::input}}" type="password"></paper-input>
