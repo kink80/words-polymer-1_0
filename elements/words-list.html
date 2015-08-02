@@ -1,7 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../bower_components/paper-styles/paper-styles.html">
-<link rel="import" href="../bower_components/neon-animation/neon-shared-element-animatable-behavior.html">
 
 <dom-module id="words-list">
   <style>
@@ -37,6 +36,10 @@
 
     .square:nth-child(5n+4) {
       background: #60c4fa;
+    }
+
+    .squares {
+      padding-top: 40%;
     }
 
   </style>
@@ -119,15 +122,18 @@
         };
 
         var nodesToScale = [];
-        var circles = Polymer.dom(this.root).querySelectorAll('.square');
-        for (var node, index = 0; node = circles[index]; index++) {
+        var squares = Polymer.dom(this.root).querySelectorAll('.square');
+        for (var node, index = 0; node = squares[index]; index++) {
           if (node !== event.target) {
             nodesToScale.push(node);
           }
         }
         this.animationConfig['exit'][1].nodes = nodesToScale;
 
-        this.fire('circle-click');
+        this.fire('set-click');
+
+        var data = this.data[target.origin];
+        this.fire('iron-signal', {name: 'load-words', data: data});
       }
     },
 
@@ -156,10 +162,6 @@
           }
         );
       }
-    },
-    selectAction: function(e, detail) {
-      var data = this.data[detail.item.origin];
-      this.fire('iron-signal', {name: "load-words", data: data});
     }
   });
 </script>

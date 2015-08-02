@@ -2,33 +2,43 @@
 <link rel="import" href="../bower_components/iron-signals/iron-signals.html">
 
 <dom-module id="words-display">
-
-  <style>
-     .fullheight { 
-       height: 100%;
-     }
-     .grey {
-       background-color: grey;
-     }
-     neon-animated-pages.words {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          font-size: 72px;
-          overflow: hidden;
-      }
-  </style>
-
   <template>
-    <iron-signals on-iron-signal-load-words="loadWords"></iron-signals>
+   <div id="main">
+      <paper-toolbar class="medium-tall" id="wordPages">
+        <paper-icon-button id="closeButton" icon="clear" on-click="_onClearButtonClick"></paper-icon-button>
 
-    <neon-animated-pages id="pages" selected="0" class="flex">
-      <template is="dom-repeat" items="{{ data.words }}" as="item">
-         <div class="fullheight grey">{{ item.original }}</div>
-      </template>  
-    </neon-animated-pages>
+        <p>{{data.name}}</p>
+      </paper-toolbar>
+
+      <iron-signals on-iron-signal-load-words="loadWords"></iron-signals>
+      <div class="horizontal layout">
+        <div class="center">
+          <paper-button raised noink id="prevButton" on-click="_goPrev">
+            <iron-icon icon="arrow-back"></iron-icon>
+          </paper-button>
+        </div>
+        <div class="wordContainer">
+          <neon-animated-pages id="wordsInSet" selected="0" class="words">
+            <template is="dom-repeat" items="{{ data.words }}" as="item">     
+              <paper-material elevation="2" idx="{{index}}">
+                <p>{{item.original}}</p>
+                <paper-button raised noink on-click="_showTranslation" hidden$="{{showTranslation}}">
+                  <iron-icon icon="visibility"></iron-icon>
+                </paper-button>
+                <paper-button raised noink on-click="_hideTranslation" hidden$="{{!showTranslation}}">
+                  <iron-icon icon="visibility-off"></iron-icon>
+                </paper-button>
+                <span hidden$="{{!showTranslation}}">{{item.translation}}</span>
+              </paper-material>
+            </template>
+          </neon-animated-pages>
+      </div>
+      <div class="center"> 
+        <paper-button raised noink id="nextButton" icon="arrow-forward" on-click="_goNext">
+          <iron-icon icon="arrow-forward"></iron-icon>
+        </paper-button>
+      </div>
+    </div>
   </template>
 </dom-module>
 
@@ -36,16 +46,79 @@
   // element registration
   Polymer({
     is: "words-display",
+
+    behaviors: [
+      Polymer.NeonAnimatableBehavior
+    ],
+
     properties: {
       data: {
         type: Object,
         value: function() {
           return {};
         }
+      },
+      showTranslation: {
+        type: Boolean,
+        value: false
+      },
+      sharedElements: {
+        type: Object,
+        value: function() {
+          return {
+            'hero': this.$.wordPages
+          };
+        }
+      },
+      animationConfig: {
+        type: Object,
+        value: function() {
+          return {
+            'entry': [{
+              name: 'fade-in-animation',
+              node: this.$.button
+            }, {
+              name: 'hero-animation',
+              id: 'hero',
+              toPage: this
+            }, {
+              name: 'fade-in-animation',
+              node: this.$.wordsList
+            }],
+            'exit': [{
+              name: 'fade-out-animation',
+              node: this.$.button
+            }, {
+              name: 'scale-down-animation',
+              node: this.$.main,
+              transformOrigin: '50% 50%',
+              axis: 'y'
+            }]
+          }
+        }
       }
+
     },
     loadWords: function(e, detail) {
       this.data = detail;
+      console.log(this.data);
+    },
+    _onClearButtonClick: function() {
+      this.fire('words-close');
+    },
+    _goPrev: function() {
+      this.showTranslation = false;
+      this.$.wordsInSet.selectPrevious();
+    },
+    _goNext: function() {
+      this.showTranslation = false;
+      this.$.wordsInSet.selectNext();
+    },
+    _showTranslation: function() {
+      this.showTranslation = true;
+    },
+    _hideTranslation: function() {
+      this.showTranslation = false;
     }
   });
 </script>

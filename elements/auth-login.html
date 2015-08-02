@@ -3,11 +3,13 @@
 
 <dom-module id="auth-login">
   <style>
+    .login-form {
+      background: #ffb74d;
+      padding-top: 20%;
+    }
     .content-wrapper {
-      background: orange;
       width: 60%;
       margin: 0 auto;
-      padding-top: 20%;
       padding-left: 5%;
       padding-right: 5%;
     }
@@ -17,7 +19,7 @@
     <iron-signals on-iron-signal-sync-completed="syncComplete"></iron-signals>
 
     <div hidden$="{{computeLoginHidden(statusKnown, user)}}">
-      <div class="content-wrapper">
+      <div class="content-wrapper login-form">
         <paper-input label="Email" value="{{email::input}}"></paper-input>
         <iron-a11y-keys target="{{ pwinput }}" keys="enter" on-keys-pressed="login"></iron-a11y-keys>
         <paper-input id="pwinput" label="Password" value="{{password::input}}" type="password"></paper-input>
@@ -26,17 +28,15 @@
     </div>
    
     <div hidden$="{{computeLogoutHidden(statusKnown, user)}}">
-     
-      <paper-button raised on-tap="logout">Logout</paper-button>
-      
-      <div class="horizontal layout">
-        <div id="wordNamesContainer">
-          
-        </div>
-        <div class="flex" id="wordListContainer">
-          <words-display></words-display>
-        </div>
-    </div>
+      <div class="content-wrapper">
+        <paper-button raised on-tap="logout">Logout</paper-button>
+
+        <neon-animated-pages id="pages" selected="0">
+          <words-list id="wordsList" on-set-click="_onSetClick"></words-list>
+          <words-display on-words-close="_onClose"></words-display>
+        </neon-animated-pages>
+
+      </div>
     </div>
   </template>
 </dom-module>
@@ -141,13 +141,17 @@
     },
     _renderWordsList: function() {
       if ( ! this.syncing ) {
-        var container = document.getElementById("wordNamesContainer");
-        var wordsList = document.createElement('words-list');
+        var wordsList = document.getElementById('wordsList');
         var loc = "https://burning-fire-4813.firebaseio.com/v1/user/" + md5(this.user.password.email) + "/wordSets";
 
         Polymer.dom(wordsList).setAttribute("loc", loc);
-        Polymer.dom(container).appendChild(wordsList);
       }
+    },
+    _onSetClick: function(event) {
+      this.$.pages.selected = 1;
+    },
+    _onClose: function(event) {
+      this.$.pages.selected = 0;
     }
   });
 </script>
