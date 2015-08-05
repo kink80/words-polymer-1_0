@@ -1,7 +1,14 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/iron-signals/iron-signals.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-behavior/paper-dialog-behavior.html">
 
 <dom-module id="words-display">
+  <style>
+    .originalword {
+      width: 100%;
+    }
+  </style>
   <template>
    <div id="main">
       <paper-toolbar class="medium-tall" id="wordPages">
@@ -13,28 +20,27 @@
       <iron-signals on-iron-signal-load-words="loadWords"></iron-signals>
       <div class="horizontal layout">
         <div class="center">
-          <paper-button raised noink id="prevButton" on-click="_goPrev">
+          <paper-button raised noink id="prevButton" on-click="_goPrev" dialogId="{{ _dialogId(index) }}">
             <iron-icon icon="arrow-back"></iron-icon>
           </paper-button>
         </div>
-        <div class="wordContainer">
+        <div class="wordContainer originalword">
           <neon-animated-pages id="wordsInSet" selected="0" class="words">
             <template is="dom-repeat" items="{{ data.words }}" as="item">     
-              <paper-material elevation="2" idx="{{index}}">
+              <paper-material elevation="2">
                 <p>{{item.original}}</p>
-                <paper-button raised noink on-click="_showTranslation" hidden$="{{showTranslation}}">
-                  <iron-icon icon="visibility"></iron-icon>
-                </paper-button>
-                <paper-button raised noink on-click="_hideTranslation" hidden$="{{!showTranslation}}">
-                  <iron-icon icon="visibility-off"></iron-icon>
-                </paper-button>
-                <span hidden$="{{!showTranslation}}">{{item.translation}}</span>
+                <paper-dialog id="{{ _dialogId(index) }}" entry-animation="scale-up-animation"
+                              exit-animation="fade-out-animation">
+                  <div>{{item.translation}}</div>
+                </paper-dialog>
+                <paper-icon-button raised noink icon="visibility" on-click="_showTranslation">
+                </paper-icon-button>
               </paper-material>
             </template>
           </neon-animated-pages>
       </div>
       <div class="center"> 
-        <paper-button raised noink id="nextButton" icon="arrow-forward" on-click="_goNext">
+        <paper-button raised noink id="nextButton" icon="arrow-forward" on-click="_goNext" dialogId="{{ _dialogId(index) }}">
           <iron-icon icon="arrow-forward"></iron-icon>
         </paper-button>
       </div>
@@ -107,18 +113,23 @@
       this.fire('words-close');
     },
     _goPrev: function() {
-      this.showTranslation = false;
+      this._hideTranslation();
       this.$.wordsInSet.selectPrevious();
     },
     _goNext: function() {
-      this.showTranslation = false;
+      this._hideTranslation();
       this.$.wordsInSet.selectNext();
+    },
+    _dialogId: function(index) {
+      return "translationDialog" + index;
     },
     _showTranslation: function() {
       this.showTranslation = true;
+      document.getElementById(this._dialogId(this.$.wordsInSet.selected)).open();
     },
     _hideTranslation: function() {
       this.showTranslation = false;
+      document.getElementById(this._dialogId(this.$.wordsInSet.selected)).close();
     }
   });
 </script>
